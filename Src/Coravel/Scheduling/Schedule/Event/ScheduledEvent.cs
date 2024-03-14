@@ -351,7 +351,7 @@ namespace Coravel.Scheduling.Schedule.Event
 
             if (utcNow.Second == 0)
             {
-                return seconds != 0 && _OneMinuteAsSeconds % seconds == 0;
+                return seconds == 0 || _OneMinuteAsSeconds % seconds == 0;
             }
             else
             {
