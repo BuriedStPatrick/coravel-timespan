@@ -1,3 +1,5 @@
+using System;
+
 namespace Coravel.Scheduling.Schedule.Interfaces
 {
     /// <summary>
@@ -142,5 +144,12 @@ namespace Coravel.Scheduling.Schedule.Interfaces
         /// </summary>
         /// <returns></returns>
         IScheduledEventConfiguration EverySeconds(int seconds);
+
+        /// <summary>
+        /// Schedule task runs every <see cref="TimeSpan"/>.
+        /// </summary>
+        /// <param name="timeSpan">The <see cref="TimeSpan"/>.</param>
+        /// <returns></returns>
+        IScheduledEventConfiguration EveryInterval(TimeSpan timeSpan);
     }
 }

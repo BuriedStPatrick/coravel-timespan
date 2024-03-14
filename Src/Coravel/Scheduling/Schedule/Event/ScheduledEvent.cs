@@ -19,8 +19,8 @@ namespace Coravel.Scheduling.Schedule.Event
         private string _eventUniqueId = null;
         private IServiceScopeFactory _scopeFactory;
         private Func<Task<bool>> _whenPredicate;
-        private bool _isScheduledPerSecond = false;
-        private int? _secondsInterval = null;
+        private bool _isScheduledFromTimeSpan = false;
+        private TimeSpan? _timeSpanInterval = null;
         private object[] _constructorParameters = null;
         private ZonedTime _zonedTime = ZonedTime.AsUTC();
         private bool _runOnceAtStart = false;
@@ -83,7 +83,7 @@ namespace Coravel.Scheduling.Schedule.Event
         {
             var zonedNow = this._zonedTime.Convert(utcNow);
 
-            if (this._isScheduledPerSecond)
+            if (this._isScheduledFromTimeSpan)
             {
                 var isSecondDue = this.IsSecondsDue(zonedNow);
                 var isWeekDayDue = this._expression.IsWeekDayDue(zonedNow);
@@ -128,7 +128,7 @@ namespace Coravel.Scheduling.Schedule.Event
 
         public string OverlappingUniqueIdentifier() => this._eventUniqueId;
 
-        public bool IsScheduledCronBasedTask() => !this._isScheduledPerSecond;
+        public bool IsScheduledCronBasedTask() => !this._isScheduledFromTimeSpan;
 
         public IScheduledEventConfiguration Daily()
         {
@@ -293,57 +293,30 @@ namespace Coravel.Scheduling.Schedule.Event
             return this._whenPredicate != null && (!await _whenPredicate.Invoke());
         }
 
-        public IScheduledEventConfiguration EverySecond()
-        {
-            this._secondsInterval = 1;
-            this._isScheduledPerSecond = true;
-            this._expression = new CronExpression("* * * * *");
-            return this;
-        }
+        public IScheduledEventConfiguration EverySecond() =>
+            EveryInterval(TimeSpan.FromSeconds(1));
 
-        public IScheduledEventConfiguration EveryFiveSeconds()
-        {
-            this._secondsInterval = 5;
-            this._isScheduledPerSecond = true;
-            this._expression = new CronExpression("* * * * *");
-            return this;
-        }
+        public IScheduledEventConfiguration EveryFiveSeconds() =>
+            EveryInterval(TimeSpan.FromSeconds(5));
 
-        public IScheduledEventConfiguration EveryTenSeconds()
-        {
-            this._secondsInterval = 10;
-            this._isScheduledPerSecond = true;
-            this._expression = new CronExpression("* * * * *");
-            return this;
-        }
+        public IScheduledEventConfiguration EveryTenSeconds() =>
+            EveryInterval(TimeSpan.FromSeconds(10));
 
-        public IScheduledEventConfiguration EveryFifteenSeconds()
-        {
-            this._secondsInterval = 15;
-            this._isScheduledPerSecond = true;
-            this._expression = new CronExpression("* * * * *");
-            return this;
-        }
+        public IScheduledEventConfiguration EveryFifteenSeconds() =>
+            EveryInterval(TimeSpan.FromSeconds(15));
 
-        public IScheduledEventConfiguration EveryThirtySeconds()
-        {
-            this._secondsInterval = 30;
-            this._isScheduledPerSecond = true;
-            this._expression = new CronExpression("* * * * *");
-            return this;
-        }
+        public IScheduledEventConfiguration EveryThirtySeconds() => 
+            EveryInterval(TimeSpan.FromSeconds(30));
 
-        public IScheduledEventConfiguration EverySeconds(int seconds)
-        {
-            if (seconds < 1 || seconds > 59)
-            {
-                throw new ArgumentException(
-                    "When calling 'EverySeconds(int seconds)', 'seconds' must be between 0 and 60");
-            }
+        public IScheduledEventConfiguration EverySeconds(int seconds) =>
+            EveryInterval(TimeSpan.FromSeconds(seconds));
 
-            this._secondsInterval = seconds;
-            this._isScheduledPerSecond = true;
+        public IScheduledEventConfiguration EveryInterval(TimeSpan timeSpan)
+        {
+            this._timeSpanInterval = timeSpan;
+            this._isScheduledFromTimeSpan = true;
             this._expression = new CronExpression("* * * * *");
+
             return this;
         }
 
@@ -367,13 +340,21 @@ namespace Coravel.Scheduling.Schedule.Event
         
         private bool IsSecondsDue(DateTime utcNow)
         {
+            // TODO: Potentially breaking change: Update assumption is that TimeSpan interval (previously _secondsInterval) is not null here which seemed dangerous.
+            if (_timeSpanInterval is null)
+            {
+                return false;
+            }
+
+            var seconds = _timeSpanInterval.Value.Seconds;
+
             if (utcNow.Second == 0)
             {
-                return _OneMinuteAsSeconds % this._secondsInterval == 0;
+                return seconds != 0 && _OneMinuteAsSeconds % seconds == 0;
             }
             else
             {
-                return utcNow.Second % this._secondsInterval == 0;
+                return seconds != 0 && utcNow.Second % seconds == 0;
             }
         }
 
