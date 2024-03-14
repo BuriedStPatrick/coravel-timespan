@@ -146,7 +146,7 @@ namespace Coravel.Scheduling.Schedule.Interfaces
         IScheduledEventConfiguration EverySeconds(int seconds);
 
         /// <summary>
-        /// Schedule task runs every <see cref="TimeSpan"/>.
+        /// Schedule task runs for <see cref="TimeSpan"/> interval.
         /// </summary>
         /// <param name="timeSpan">The <see cref="TimeSpan"/>.</param>
         /// <returns></returns>

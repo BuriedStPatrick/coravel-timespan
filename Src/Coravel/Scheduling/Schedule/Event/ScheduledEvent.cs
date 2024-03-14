@@ -340,13 +340,14 @@ namespace Coravel.Scheduling.Schedule.Event
         
         private bool IsSecondsDue(DateTime utcNow)
         {
-            // TODO: Potentially breaking change: Update assumption is that TimeSpan interval (previously _secondsInterval) is not null here which seemed dangerous.
-            if (_timeSpanInterval is null)
+            // TODO: Potentially breaking change:
+            // Changes assumption is that TimeSpan interval (previously _secondsInterval) was not null here which seemed dangerous.
+            if (this._timeSpanInterval is null)
             {
                 return false;
             }
 
-            var seconds = _timeSpanInterval.Value.Seconds;
+            var seconds = this._timeSpanInterval.Value.Seconds;
 
             if (utcNow.Second == 0)
             {
